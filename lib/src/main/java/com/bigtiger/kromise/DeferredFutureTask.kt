@@ -81,7 +81,7 @@ class DeferredFutureTask<D, P> : FutureTask<D> {
     constructor(task: DeferredRunnable<P>, cancellationHandler: CancellationHandler?) : super(task, null) {
         this.taskDelegate = task
         this.cancellationHandler = cancellationHandler
-        this.deferred = task.getDeferred()
+        this.deferred = task.getDeferred() as Deferred<D, Throwable, P>
         this.startPolicy = task.getStartPolicy()
     }
 

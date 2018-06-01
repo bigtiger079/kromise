@@ -8,7 +8,7 @@ import com.bigtiger.kromise.multiple.*
 import java.util.concurrent.atomic.AtomicInteger
 
 
-class AllValuesDeferredObject(kromises:Array<Kromise<*, *, *>>)
+class AllValuesDeferredObject(kromises:Array<Kromise<*, *, *>?>)
     : DeferredObject<AllValues, Throwable, MasterProgress>()
         , Kromise<AllValues, Throwable, MasterProgress> {
 
@@ -20,18 +20,18 @@ class AllValuesDeferredObject(kromises:Array<Kromise<*, *, *>>)
     init {
         values = DefaultMutableAllValues(numberOfKromise)
         for (i in 0 until numberOfKromise) {
-            configureKromise(i, kromises[i])
+            configureKromise(i, kromises[i]!!)
         }
     }
 
     fun <D, F, P>configureKromise(index: Int, kromise: Kromise<D, F, P>) {
-        kromise.fail(object : FailCallback<F>{
-            override fun onFail(result: F) {
+        kromise.fail(object: FailCallback<F> {
+            override fun onFail(result: F?) {
                 synchronized(this@AllValuesDeferredObject) {
                     if (!this@AllValuesDeferredObject.isPending()) {
                         return
                     }
-                    values.set(index, OneReject(index, kromise, result))
+                    values.set(index, OneReject(index, kromise, result!!))
                     val fail = failCount.incrementAndGet()
                     val done = doneCount.incrementAndGet()
                     this@AllValuesDeferredObject.notify(MasterProgress(doneCount.get(), fail, numberOfKromise))
@@ -40,6 +40,7 @@ class AllValuesDeferredObject(kromises:Array<Kromise<*, *, *>>)
                     }
                 }
             }
+
         }).progress(object : ProgressCallback<P>{
             override fun onProgress(progress: P) {
                 synchronized(this@AllValuesDeferredObject) {
@@ -53,12 +54,12 @@ class AllValuesDeferredObject(kromises:Array<Kromise<*, *, *>>)
                 }
             }
         }).done(object : DoneCallback<D>{
-            override fun onDone(result: D) {
+            override fun onDone(result: D?) {
                 synchronized(this@AllValuesDeferredObject) {
                     if (!this@AllValuesDeferredObject.isPending())
                         return
 
-                    values.set(index, OneResult<D>(index, kromise, result))
+                    values.set(index, OneResult<D>(index, kromise, result!!))
                     val fail = failCount.get()
                     val done = doneCount.incrementAndGet()
 

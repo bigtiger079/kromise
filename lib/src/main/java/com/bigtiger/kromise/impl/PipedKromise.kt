@@ -13,17 +13,17 @@ class PipedKromise<D, F, P, D_OUT, F_OUT, P_OUT> ()
                 failFilter: FailPipe<in F, out D_OUT, out F_OUT, out P_OUT>?,
                 progressFilter: ProgressPipe<in P, out D_OUT, out F_OUT, out P_OUT>?):this() {
         kromise.done(object : DoneCallback<D> {
-            override fun onDone(result: D) {
+            override fun onDone(result: D?) {
                 if (doneFilter != null)
-                    pipe(doneFilter.pipeDone(result))
+                    pipe(doneFilter.pipeDone(result!!))
                 else
                     this@PipedKromise.resolve(result as D_OUT)
 
             }
         }).fail(object : FailCallback<F> {
-            override fun onFail(result: F) {
+            override fun onFail(result: F?) {
                 if (failFilter != null)
-                    pipe(failFilter.pipeFail(result))
+                    pipe(failFilter.pipeFail(result!!))
                 else
                     this@PipedKromise.reject(result as F_OUT)
             }
@@ -40,8 +40,8 @@ class PipedKromise<D, F, P, D_OUT, F_OUT, P_OUT> ()
     constructor(kromise: Kromise<D, F, P_OUT>,
                 alwaysFilter: AlwaysPipe<in D, in F, out D_OUT, out F_OUT, out P_OUT>): this() {
         kromise.always(object : AlwaysCallback<D, F> {
-            override fun onAlways(state: State, resolved: D, rejected: F) {
-                pipe(alwaysFilter.pipeAlways(state, resolved, rejected))
+            override fun onAlways(state: State, resolved: D?, rejected: F?) {
+                pipe(alwaysFilter.pipeAlways(state, resolved!!, rejected!!))
             }
         }).progress(object : ProgressCallback<P_OUT> {
             override fun onProgress(progress: P_OUT) {
@@ -52,12 +52,12 @@ class PipedKromise<D, F, P, D_OUT, F_OUT, P_OUT> ()
 
     protected fun pipe(kromise: Kromise<out D_OUT, out F_OUT, out P_OUT>): Kromise<out D_OUT, out F_OUT, out P_OUT> {
         kromise.done(object : DoneCallback<D_OUT> {
-            override fun onDone(result: D_OUT) {
-                this@PipedKromise.resolve(result)
+            override fun onDone(result: D_OUT?) {
+                this@PipedKromise.resolve(result!!)
             }
         }).fail(object : FailCallback<F_OUT> {
-            override fun onFail(result: F_OUT) {
-                this@PipedKromise.reject(result)
+            override fun onFail(result: F_OUT?) {
+                this@PipedKromise.reject(result!!)
             }
         }).progress(object : ProgressCallback<P_OUT> {
             override fun onProgress(progress: P_OUT) {

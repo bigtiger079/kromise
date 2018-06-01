@@ -17,6 +17,7 @@ abstract class AbstractKromise<D, F,P> : Kromise<D, F, P> {
 
     protected var resolveResult: D? = null
     protected var rejectResult: F? = null
+    val lock = Object()
 
     override fun state(): State {
         return state
@@ -102,14 +103,15 @@ abstract class AbstractKromise<D, F,P> : Kromise<D, F, P> {
 
     }
 
-    protected fun triggerAlways(state: State, resolve: D, reject: F?) {
+    protected fun triggerAlways(state: State, resolve: D?, reject: F?) {
         for (callback in alwaysCallbacks) {
             triggerAlways(callback, state, resolve, reject)
         }
         alwaysCallbacks.clear()
-
-        synchronized(this@AbstractKromise) {
-            this@AbstractKromise.notifyAll()
+//        val lock = Object()
+        synchronized(lock) {
+            lock.notifyAll()
+            //this@AbstractKromise.notifyAll()
         }
     }
 
@@ -203,15 +205,17 @@ abstract class AbstractKromise<D, F,P> : Kromise<D, F, P> {
     @Throws(InterruptedException::class)
     override fun waitSafely(timeout: Long) {
         val startTime = System.currentTimeMillis()
-        synchronized(this) {
+        synchronized(lock) {
             while (this.isPending()) {
                 try {
                     if (timeout <= 0) {
-                        this@AbstractKromise.wait()
+                        lock.wait()
+                        //this@AbstractKromise.wait()
                     } else {
                         val elapsed = System.currentTimeMillis() - startTime
                         val waitTime = timeout - elapsed
-                        this@AbstractKromise.wait(waitTime)
+                        lock.wait(waitTime)
+                        //this@AbstractKromise.wait(waitTime)
                     }
                 } catch (e: InterruptedException) {
                     Thread.currentThread().interrupt()

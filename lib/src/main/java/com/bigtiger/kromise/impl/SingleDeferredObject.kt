@@ -8,12 +8,12 @@ import com.bigtiger.kromise.FailCallback
 import com.bigtiger.kromise.DeferredFutureTask
 
 
-internal class SingleDeferredObject(tasks: Array<DeferredFutureTask<*, *>>) : DeferredObject<OneResult<*>, OneReject<Throwable>, Void>(), Kromise<OneResult<*>, OneReject<Throwable>, Void> {
+internal class SingleDeferredObject(tasks: Array<DeferredFutureTask<*, *>?>) : DeferredObject<OneResult<*>, OneReject<Throwable>, Void>(), Kromise<OneResult<*>, OneReject<Throwable>, Void> {
     private var resolvedOrRejectedTaskIndex: Int = 0
 
     init {
         for (index in tasks.indices) {
-            configureTask(index, tasks[index])
+            configureTask(index, tasks[index]!!)
         }
 
         fail(object : FailCallback<OneReject<Throwable>> {
@@ -29,11 +29,11 @@ internal class SingleDeferredObject(tasks: Array<DeferredFutureTask<*, *>>) : De
         })
     }
 
-    private fun cancelAllTasks(tasks: Array<DeferredFutureTask<*, *>>) {
+    private fun cancelAllTasks(tasks: Array<DeferredFutureTask<*, *>?>) {
         for (index in tasks.indices) {
             val task = tasks[index]
             if (index != resolvedOrRejectedTaskIndex) {
-                task.cancel(true)
+                task?.cancel(true)
             }
         }
     }
@@ -45,7 +45,7 @@ internal class SingleDeferredObject(tasks: Array<DeferredFutureTask<*, *>>) : De
                     if (this@SingleDeferredObject.isPending()) {
                         // task $index is rejected
                         resolvedOrRejectedTaskIndex = index
-                        this@SingleDeferredObject.reject(OneReject(index, task.kromise(), reject))
+                        this@SingleDeferredObject.reject(OneReject(index, task.kromise(), reject!!))
                     }
                 }
             }
@@ -55,7 +55,7 @@ internal class SingleDeferredObject(tasks: Array<DeferredFutureTask<*, *>>) : De
                     if (this@SingleDeferredObject.isPending()) {
                         // task $index is resolved
                         resolvedOrRejectedTaskIndex = index
-                        this@SingleDeferredObject.resolve(OneResult(index, task.kromise(), result))
+                        this@SingleDeferredObject.resolve(OneResult(index, task.kromise(), result!!))
                     }
                 }
             }

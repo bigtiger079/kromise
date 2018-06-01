@@ -120,7 +120,9 @@ abstract class AbstractDeferredManager: DeferredManager {
         return MasterDeferredObjectN(kromiseV1, kromiseV2, kromiseV3, kromiseV4, kromiseV5, kromise6, *kromiseN as Array<out Kromise<*, *, *>>) as Kromise<MultipleResultsN<V1, V2, V3, V4, V5>, OneReject<F>, MasterProgress>
     }
 
-    override fun `when`(runnable1: Runnable, runnable2: Runnable, vararg runnables: Runnable): Kromise<MultipleResults, OneReject<Throwable>, MasterProgress> {
+    override fun `when`(runnable1: Runnable, runnable2: Runnable, vararg runnables: Runnable)
+            : Kromise<MultipleResults, OneReject<Throwable>, MasterProgress> {
+
         assertNotNull(runnable1, "runnable1")
         assertNotNull(runnable2, "runnable2")
         val kromises = arrayOf(`when`(runnable1), `when`(runnable2))//arrayOfNulls<Kromise>(runnables.size + 2)
@@ -136,14 +138,14 @@ abstract class AbstractDeferredManager: DeferredManager {
         }
 
         when (kromises.size) {
-            2 -> return `when`(kromises[0], kromises[1])
-            3 -> return `when`(kromises[0], kromises[1], kromises[2])
-            4 -> return `when`(kromises[0], kromises[1], kromises[2], kromises[3])
-            5 -> return `when`(kromises[0], kromises[1], kromises[2], kromises[3], kromises[4])
+            2 -> return `when`<Throwable, Void,  Void>(kromises[0], kromises[1]) as Kromise<MultipleResults, OneReject<Throwable>, MasterProgress>
+            3 -> return `when`<Throwable, Void,  Void, Void>(kromises[0], kromises[1], kromises[2]) as Kromise<MultipleResults, OneReject<Throwable>, MasterProgress>
+            4 -> return `when`<Throwable, Void,  Void, Void, Void>(kromises[0], kromises[1], kromises[2], kromises[3]) as Kromise<MultipleResults, OneReject<Throwable>, MasterProgress>
+            5 -> return `when`<Throwable, Void,  Void, Void, Void, Void>(kromises[0], kromises[1], kromises[2], kromises[3], kromises[4]) as Kromise<MultipleResults, OneReject<Throwable>, MasterProgress>
             else -> {
                 val kromiseN = arrayOfNulls<Kromise<*, *, *>>(kromises.size - 5)
                 System.arraycopy(kromises, 5, kromiseN, 0, kromiseN.size)
-                return MasterDeferredObjectN(kromises[0], kromises[1], kromises[2], kromises[3], kromises[4], kromises[5], *kromiseN)
+                return MasterDeferredObjectN(kromises[0], kromises[1], kromises[2], kromises[3], kromises[4], kromises[5], *kromiseN) as Kromise<MultipleResults, OneReject<Throwable>, MasterProgress>
             }
         }
     }
@@ -213,7 +215,7 @@ abstract class AbstractDeferredManager: DeferredManager {
                 kromiseN[i] = `when`(callables[i])
             }
         }
-        return MasterDeferredObjectN(kromise1, kromise2, kromise3, kromise4, kromise5, `when`(callable6), kromiseN)
+        return MasterDeferredObjectN(kromise1, kromise2, kromise3, kromise4, kromise5, `when`(callable6), *kromiseN) as Kromise<MultipleResultsN<V1, V2, V3, V4, V5>, OneReject<Throwable>, MasterProgress>
     }
 
     override fun <P1, P2> `when`(
@@ -221,7 +223,7 @@ abstract class AbstractDeferredManager: DeferredManager {
             runnableP2: DeferredRunnable<P2>): Kromise<MultipleResults2<Void, Void>, OneReject<Throwable>, MasterProgress> {
         assertNotNull(runnableP1, RUNNABLE_V1)
         assertNotNull(runnableP2, RUNNABLE_V2)
-        return MasterDeferredObject2(`when`<P1>(runnableP1), `when`<P2>(runnableP2))
+        return MasterDeferredObject2(`when`(runnableP1), `when`(runnableP2)) as Kromise<MultipleResults2<Void, Void>, OneReject<Throwable>, MasterProgress>
     }
 
     override fun <P1, P2, P3> `when`(
@@ -231,7 +233,7 @@ abstract class AbstractDeferredManager: DeferredManager {
         assertNotNull(runnableP1, RUNNABLE_V1)
         assertNotNull(runnableP2, RUNNABLE_V2)
         assertNotNull(runnableP3, RUNNABLE_V3)
-        return MasterDeferredObject3(`when`<P1>(runnableP1), `when`<P2>(runnableP2), `when`<P3>(runnableP3))
+        return MasterDeferredObject3(`when`(runnableP1), `when`(runnableP2), `when`(runnableP3)) as Kromise<MultipleResults3<Void, Void, Void>, OneReject<Throwable>, MasterProgress>
     }
 
     override fun <P1, P2, P3, P4> `when`(
@@ -243,7 +245,7 @@ abstract class AbstractDeferredManager: DeferredManager {
         assertNotNull(runnableP2, RUNNABLE_V2)
         assertNotNull(runnableP3, RUNNABLE_V3)
         assertNotNull(runnableP4, RUNNABLE_V4)
-        return MasterDeferredObject4(`when`<P1>(runnableP1), `when`<P2>(runnableP2), `when`<P3>(runnableP3), `when`<P4>(runnableP4))
+        return MasterDeferredObject4(`when`(runnableP1), `when`(runnableP2), `when`(runnableP3), `when`(runnableP4)) as Kromise<MultipleResults4<Void, Void, Void, Void>, OneReject<Throwable>, MasterProgress>
     }
 
     override fun <P1, P2, P3, P4, P5> `when`(
@@ -257,7 +259,7 @@ abstract class AbstractDeferredManager: DeferredManager {
         assertNotNull(runnableP3, RUNNABLE_V3)
         assertNotNull(runnableP4, RUNNABLE_V4)
         assertNotNull(runnableP5, RUNNABLE_V5)
-        return MasterDeferredObject5(`when`(runnableP1), `when`(runnableP2), `when`(runnableP3), `when`(runnableP4), `when`(runnableP5))
+        return MasterDeferredObject5(`when`(runnableP1), `when`(runnableP2), `when`(runnableP3), `when`(runnableP4), `when`(runnableP5)) as Kromise<MultipleResults5<Void, Void, Void, Void, Void>, OneReject<Throwable>, MasterProgress>
     }
 
     override fun <P1, P2, P3, P4, P5> `when`(
@@ -286,20 +288,20 @@ abstract class AbstractDeferredManager: DeferredManager {
         for (i in runnables.indices) {
             kromiseN[i] = `when`(runnables[i])
         }
-        return MasterDeferredObjectN(kromise1, kromise2, kromise3, kromise4, kromise5, kromise6, kromiseN)
+        return MasterDeferredObjectN(kromise1, kromise2, kromise3, kromise4, kromise5, kromise6, *kromiseN) as Kromise<MultipleResultsN<Void, Void, Void, Void, Void>, OneReject<Throwable>, MasterProgress>
     }
 
     override fun <V1, V2> `when`(callableV1: DeferredCallable<V1, *>, callableV2: DeferredCallable<V2, *>): Kromise<MultipleResults2<V1, V2>, OneReject<Throwable>, MasterProgress> {
         assertNotNull(callableV1, CALLABLE_V1)
         assertNotNull(callableV2, CALLABLE_V2)
-        return MasterDeferredObject2(`when`<V1, *>(callableV1), `when`<V2, *>(callableV2))
+        return MasterDeferredObject2(`when`<V1>(callableV1), `when`<V2>(callableV2)) as Kromise<MultipleResults2<V1, V2>, OneReject<Throwable>, MasterProgress>
     }
 
     override fun <V1, V2, V3> `when`(callableV1: DeferredCallable<V1, *>, callableV2: DeferredCallable<V2, *>, callableV3: DeferredCallable<V3, *>): Kromise<MultipleResults3<V1, V2, V3>, OneReject<Throwable>, MasterProgress> {
         assertNotNull(callableV1, CALLABLE_V1)
         assertNotNull(callableV2, CALLABLE_V2)
         assertNotNull(callableV3, CALLABLE_V3)
-        return MasterDeferredObject3(`when`<V1, *>(callableV1), `when`<V2, *>(callableV2), `when`<V3, *>(callableV3))
+        return MasterDeferredObject3(`when`<V1>(callableV1), `when`<V2>(callableV2), `when`<V3>(callableV3)) as Kromise<MultipleResults3<V1, V2, V3>, OneReject<Throwable>, MasterProgress>
     }
 
     override fun <V1, V2, V3, V4> `when`(callableV1: DeferredCallable<V1, *>, callableV2: DeferredCallable<V2, *>, callableV3: DeferredCallable<V3, *>, callableV4: DeferredCallable<V4, *>): Kromise<MultipleResults4<V1, V2, V3, V4>, OneReject<Throwable>, MasterProgress> {
@@ -307,7 +309,7 @@ abstract class AbstractDeferredManager: DeferredManager {
         assertNotNull(callableV2, CALLABLE_V2)
         assertNotNull(callableV3, CALLABLE_V3)
         assertNotNull(callableV4, CALLABLE_V4)
-        return MasterDeferredObject4(`when`<V1, *>(callableV1), `when`<V2, *>(callableV2), `when`<V3, *>(callableV3), `when`<V4, *>(callableV4))
+        return MasterDeferredObject4(`when`<V1>(callableV1), `when`<V2>(callableV2), `when`<V3>(callableV3), `when`<V4>(callableV4)) as Kromise<MultipleResults4<V1, V2, V3, V4>, OneReject<Throwable>, MasterProgress>
     }
 
     override fun <V1, V2, V3, V4, V5> `when`(callableV1: DeferredCallable<V1, *>, callableV2: DeferredCallable<V2, *>, callableV3: DeferredCallable<V3, *>, callableV4: DeferredCallable<V4, *>, callableV5: DeferredCallable<V5, *>): Kromise<MultipleResults5<V1, V2, V3, V4, V5>, OneReject<Throwable>, MasterProgress> {
@@ -316,7 +318,7 @@ abstract class AbstractDeferredManager: DeferredManager {
         assertNotNull(callableV3, CALLABLE_V3)
         assertNotNull(callableV4, CALLABLE_V4)
         assertNotNull(callableV5, CALLABLE_V5)
-        return MasterDeferredObject5(`when`<V1, *>(callableV1), `when`<V2, *>(callableV2), `when`<V3, *>(callableV3), `when`<V4, *>(callableV4), `when`<V5, *>(callableV5))
+        return MasterDeferredObject5(`when`<V1>(callableV1), `when`<V2>(callableV2), `when`<V3>(callableV3), `when`<V4>(callableV4), `when`<V5>(callableV5)) as Kromise<MultipleResults5<V1, V2, V3, V4, V5>, OneReject<Throwable>, MasterProgress>
     }
 
     override fun <V1, V2, V3, V4, V5> `when`(callableV1: DeferredCallable<V1, *>, callableV2: DeferredCallable<V2, *>, callableV3: DeferredCallable<V3, *>, callableV4: DeferredCallable<V4, *>, callableV5: DeferredCallable<V5, *>, callable6: DeferredCallable<*, *>, vararg callables: DeferredCallable<*, *>): Kromise<MultipleResultsN<V1, V2, V3, V4, V5>, OneReject<Throwable>, MasterProgress> {
@@ -338,20 +340,20 @@ abstract class AbstractDeferredManager: DeferredManager {
         for (i in callables.indices) {
             kromiseN[i] = `when`(callables[i])
         }
-        return MasterDeferredObjectN(kromise1, kromise2, kromise3, kromise4, kromise5, kromise6, kromiseN)
+        return MasterDeferredObjectN(kromise1, kromise2, kromise3, kromise4, kromise5, kromise6, *kromiseN) as Kromise<MultipleResultsN<V1, V2, V3, V4, V5>, OneReject<Throwable>, MasterProgress>
     }
 
     override fun <V1, V2> `when`(taskV1: DeferredFutureTask<V1, *>, taskV2: DeferredFutureTask<V2, *>): Kromise<MultipleResults2<V1, V2>, OneReject<Throwable>, MasterProgress> {
         assertNotNull(taskV1, TASK_V1)
         assertNotNull(taskV2, TASK_V2)
-        return MasterDeferredObject2(`when`<V1, *>(taskV1), `when`<V2, *>(taskV2))
+        return MasterDeferredObject2(`when`<V1>(taskV1), `when`<V2>(taskV2)) as Kromise<MultipleResults2<V1, V2>, OneReject<Throwable>, MasterProgress>
     }
 
     override fun <V1, V2, V3> `when`(taskV1: DeferredFutureTask<V1, *>, taskV2: DeferredFutureTask<V2, *>, taskV3: DeferredFutureTask<V3, *>): Kromise<MultipleResults3<V1, V2, V3>, OneReject<Throwable>, MasterProgress> {
         assertNotNull(taskV1, TASK_V1)
         assertNotNull(taskV2, TASK_V2)
         assertNotNull(taskV3, TASK_V3)
-        return MasterDeferredObject3(`when`<V1, *>(taskV1), `when`<V2, *>(taskV2), `when`<V3, *>(taskV3))
+        return MasterDeferredObject3(`when`<V1>(taskV1), `when`<V2>(taskV2), `when`<V3>(taskV3)) as Kromise<MultipleResults3<V1, V2, V3>, OneReject<Throwable>, MasterProgress>
     }
 
     override fun <V1, V2, V3, V4> `when`(taskV1: DeferredFutureTask<V1, *>, taskV2: DeferredFutureTask<V2, *>, taskV3: DeferredFutureTask<V3, *>, taskV4: DeferredFutureTask<V4, *>): Kromise<MultipleResults4<V1, V2, V3, V4>, OneReject<Throwable>, MasterProgress> {
@@ -359,7 +361,7 @@ abstract class AbstractDeferredManager: DeferredManager {
         assertNotNull(taskV2, TASK_V2)
         assertNotNull(taskV3, TASK_V3)
         assertNotNull(taskV4, TASK_V4)
-        return MasterDeferredObject4(`when`<V1, *>(taskV1), `when`<V2, *>(taskV2), `when`<V3, *>(taskV3), `when`<V4, *>(taskV4))
+        return MasterDeferredObject4(`when`<V1>(taskV1), `when`<V2>(taskV2), `when`<V3>(taskV3), `when`<V4>(taskV4)) as Kromise<MultipleResults4<V1, V2, V3, V4>, OneReject<Throwable>, MasterProgress>
     }
 
     override fun <V1, V2, V3, V4, V5> `when`(taskV1: DeferredFutureTask<V1, *>, taskV2: DeferredFutureTask<V2, *>, taskV3: DeferredFutureTask<V3, *>, taskV4: DeferredFutureTask<V4, *>, taskV5: DeferredFutureTask<V5, *>): Kromise<MultipleResults5<V1, V2, V3, V4, V5>, OneReject<Throwable>, MasterProgress> {
@@ -368,10 +370,18 @@ abstract class AbstractDeferredManager: DeferredManager {
         assertNotNull(taskV3, TASK_V3)
         assertNotNull(taskV4, TASK_V4)
         assertNotNull(taskV5, TASK_V5)
-        return MasterDeferredObject5(`when`(taskV1), `when`(taskV2), `when`(taskV3), `when`(taskV4), `when`(taskV5))
+        return MasterDeferredObject5(`when`(taskV1), `when`(taskV2), `when`(taskV3), `when`(taskV4), `when`(taskV5)) as Kromise<MultipleResults5<V1, V2, V3, V4, V5>, OneReject<Throwable>, MasterProgress>
     }
 
-    override fun <V1, V2, V3, V4, V5> `when`(taskV1: DeferredFutureTask<V1, *>, taskV2: DeferredFutureTask<V2, *>, taskV3: DeferredFutureTask<V3, *>, taskV4: DeferredFutureTask<V4, *>, taskV5: DeferredFutureTask<V5, *>, task6: DeferredFutureTask<*, *>, vararg tasks: DeferredFutureTask<*, *>): Kromise<MultipleResultsN<V1, V2, V3, V4, V5>, OneReject<Throwable>, MasterProgress> {
+    override fun <V1, V2, V3, V4, V5> `when`(taskV1: DeferredFutureTask<V1, *>,
+                                             taskV2: DeferredFutureTask<V2, *>,
+                                             taskV3: DeferredFutureTask<V3, *>,
+                                             taskV4: DeferredFutureTask<V4, *>,
+                                             taskV5: DeferredFutureTask<V5, *>,
+                                             task6: DeferredFutureTask<*, *>,
+                                             vararg tasks: DeferredFutureTask<*, *>)
+            : Kromise<MultipleResultsN<V1, V2, V3, V4, V5>, OneReject<Throwable>, MasterProgress> {
+
         assertNotNull(taskV1, TASK_V1)
         assertNotNull(taskV2, TASK_V2)
         assertNotNull(taskV3, TASK_V3)
@@ -390,40 +400,62 @@ abstract class AbstractDeferredManager: DeferredManager {
         for (i in tasks.indices) {
             kromiseN[i] = `when`(tasks[i])
         }
-        return MasterDeferredObjectN(kromise1, kromise2, kromise3, kromise4, kromise5, kromise6, kromiseN)
+        return MasterDeferredObjectN(kromise1, kromise2, kromise3, kromise4, kromise5, kromise6, *kromiseN) as Kromise<MultipleResultsN<V1, V2, V3, V4, V5>, OneReject<Throwable>, MasterProgress>
     }
 
-    override fun <V1, V2> `when`(futureV1: Future<V1>, futureV2: Future<V2>): Kromise<MultipleResults2<V1, V2>, OneReject<Throwable>, MasterProgress> {
+    override fun <V1, V2> `when`(futureV1: Future<V1>, futureV2: Future<V2>)
+            : Kromise<MultipleResults2<V1, V2>, OneReject<Throwable>, MasterProgress> {
+
         assertNotNull(futureV1, FUTURE_V1)
         assertNotNull(futureV2, FUTURE_V2)
-        return MasterDeferredObject2(`when`(futureV1), `when`(futureV2))
+
+        return MasterDeferredObject2(`when`(futureV1), `when`(futureV2)) as Kromise<MultipleResults2<V1, V2>, OneReject<Throwable>, MasterProgress>
     }
 
-    override fun <V1, V2, V3> `when`(futureV1: Future<V1>, futureV2: Future<V2>, futureV3: Future<V3>): Kromise<MultipleResults3<V1, V2, V3>, OneReject<Throwable>, MasterProgress> {
+    override fun <V1, V2, V3> `when`(futureV1: Future<V1>, futureV2: Future<V2>, futureV3: Future<V3>)
+            : Kromise<MultipleResults3<V1, V2, V3>, OneReject<Throwable>, MasterProgress> {
+
         assertNotNull(futureV1, FUTURE_V1)
         assertNotNull(futureV2, FUTURE_V2)
         assertNotNull(futureV3, FUTURE_V3)
-        return MasterDeferredObject3(`when`(futureV1), `when`(futureV2), `when`(futureV3))
+        return MasterDeferredObject3(`when`(futureV1), `when`(futureV2), `when`(futureV3)) as Kromise<MultipleResults3<V1, V2, V3>, OneReject<Throwable>, MasterProgress>
     }
 
-    override fun <V1, V2, V3, V4> `when`(futureV1: Future<V1>, futureV2: Future<V2>, futureV3: Future<V3>, futureV4: Future<V4>): Kromise<MultipleResults4<V1, V2, V3, V4>, OneReject<Throwable>, MasterProgress> {
+    override fun <V1, V2, V3, V4> `when`(futureV1: Future<V1>, futureV2: Future<V2>,
+                                         futureV3: Future<V3>, futureV4: Future<V4>)
+            : Kromise<MultipleResults4<V1, V2, V3, V4>, OneReject<Throwable>, MasterProgress> {
+
         assertNotNull(futureV1, FUTURE_V1)
         assertNotNull(futureV2, FUTURE_V2)
         assertNotNull(futureV3, FUTURE_V3)
         assertNotNull(futureV4, FUTURE_V4)
-        return MasterDeferredObject4(`when`(futureV1), `when`(futureV2), `when`(futureV3), `when`(futureV4))
+        return MasterDeferredObject4(`when`(futureV1), `when`(futureV2), `when`(futureV3), `when`(futureV4)) as Kromise<MultipleResults4<V1, V2, V3, V4>, OneReject<Throwable>, MasterProgress>
     }
 
-    override fun <V1, V2, V3, V4, V5> `when`(futureV1: Future<V1>, futureV2: Future<V2>, futureV3: Future<V3>, futureV4: Future<V4>, futureV5: Future<V5>): Kromise<MultipleResults5<V1, V2, V3, V4, V5>, OneReject<Throwable>, MasterProgress> {
+    override fun <V1, V2, V3, V4, V5> `when`(futureV1: Future<V1>,
+                                             futureV2: Future<V2>,
+                                             futureV3: Future<V3>,
+                                             futureV4: Future<V4>,
+                                             futureV5: Future<V5>)
+            : Kromise<MultipleResults5<V1, V2, V3, V4, V5>, OneReject<Throwable>, MasterProgress> {
+
         assertNotNull(futureV1, FUTURE_V1)
         assertNotNull(futureV2, FUTURE_V2)
         assertNotNull(futureV3, FUTURE_V3)
         assertNotNull(futureV4, FUTURE_V4)
         assertNotNull(futureV5, FUTURE_V5)
-        return MasterDeferredObject5(`when`(futureV1), `when`(futureV2), `when`(futureV3), `when`(futureV4), `when`(futureV5))
+        return MasterDeferredObject5(`when`(futureV1), `when`(futureV2), `when`(futureV3), `when`(futureV4), `when`(futureV5)) as Kromise<MultipleResults5<V1, V2, V3, V4, V5>, OneReject<Throwable>, MasterProgress>
     }
 
-    override fun <V1, V2, V3, V4, V5> `when`(futureV1: Future<V1>, futureV2: Future<V2>, futureV3: Future<V3>, futureV4: Future<V4>, futureV5: Future<V5>, future6: Future<*>, vararg futures: Future<*>): Kromise<MultipleResultsN<V1, V2, V3, V4, V5>, OneReject<Throwable>, MasterProgress> {
+    override fun <V1, V2, V3, V4, V5> `when`(futureV1: Future<V1>,
+                                             futureV2: Future<V2>,
+                                             futureV3: Future<V3>,
+                                             futureV4: Future<V4>,
+                                             futureV5: Future<V5>,
+                                             future6: Future<*>,
+                                             vararg futures: Future<*>)
+            : Kromise<MultipleResultsN<V1, V2, V3, V4, V5>, OneReject<Throwable>, MasterProgress> {
+
         assertNotNull(futureV1, FUTURE_V1)
         assertNotNull(futureV2, FUTURE_V2)
         assertNotNull(futureV3, FUTURE_V3)
@@ -442,7 +474,7 @@ abstract class AbstractDeferredManager: DeferredManager {
         for (i in futures.indices) {
             kromiseN[i] = `when`(futures[i])
         }
-        return MasterDeferredObjectN(kromise1, kromise2, kromise3, kromise4, kromise5, kromise6, kromiseN)
+        return MasterDeferredObjectN(kromise1, kromise2, kromise3, kromise4, kromise5, kromise6, *kromiseN) as Kromise<MultipleResultsN<V1, V2, V3, V4, V5>, OneReject<Throwable>, MasterProgress>
     }
 
     override fun <D, F, P> `when`(kromise: Kromise<D, F, P>): Kromise<D, F, P> {
@@ -552,12 +584,12 @@ abstract class AbstractDeferredManager: DeferredManager {
         assertNotNull(futureV1, FUTURE_V1)
         assertNotNull(futureV2, FUTURE_V2)
 
-        val allTasks = arrayOfNulls<DeferredFutureTask<*, *>>(2 + (futures?.size ?: 0))
-        allTasks[0] = DeferredFutureTask(deferredCallableFor<Any>(futureV1))
-        allTasks[1] = DeferredFutureTask(deferredCallableFor<Any>(futureV2))
+        val allTasks = arrayOfNulls<DeferredFutureTask<*, *>>(2 + (futures.size))
+        allTasks[0] = DeferredFutureTask(deferredCallableFor(futureV1))
+        allTasks[1] = DeferredFutureTask(deferredCallableFor(futureV2))
         if (futures != null) {
             for (i in futures.indices) {
-                allTasks[2 + i] = DeferredFutureTask(deferredCallableFor<Any>(futures[i]))
+                allTasks[2 + i] = DeferredFutureTask(deferredCallableFor(futures[i]))
             }
         }
 
@@ -580,9 +612,9 @@ abstract class AbstractDeferredManager: DeferredManager {
         return submitForSingle(allTasks)
     }
 
-    protected fun submitForSingle(tasks: Array<DeferredFutureTask<*, *>>): Kromise<OneResult<*>, OneReject<Throwable>, Void> {
+    protected fun submitForSingle(tasks: Array<DeferredFutureTask<*, *>?>): Kromise<OneResult<*>, OneReject<Throwable>, Void> {
         for (task in tasks) {
-            submit(task)
+            submit(task!!)
         }
         return SingleDeferredObject(tasks)
     }
@@ -673,7 +705,7 @@ abstract class AbstractDeferredManager: DeferredManager {
         return AllValuesDeferredObject(kromises)
     }
 
-    fun settle(futureV1: Future<*>, futureV2: Future<*>, vararg futures: Future<*>): Kromise<AllValues, Throwable, MasterProgress> {
+    override fun settle(futureV1: Future<*>, futureV2: Future<*>, vararg futures: Future<*>): Kromise<AllValues, Throwable, MasterProgress> {
         assertNotNull(futureV1, FUTURE_V1)
         assertNotNull(futureV2, FUTURE_V2)
 
@@ -705,7 +737,7 @@ abstract class AbstractDeferredManager: DeferredManager {
         return AllValuesDeferredObject(kromises)
     }
 
-    fun settle(kromiseV1: Kromise<*, *, *>, kromiseV2: Kromise<*, *, *>, vararg kromises: Kromise<*, *, *>): Kromise<AllValues, Throwable, MasterProgress> {
+    override fun settle(kromiseV1: Kromise<*, *, *>, kromiseV2: Kromise<*, *, *>, vararg kromises: Kromise<*, *, *>): Kromise<AllValues, Throwable, MasterProgress> {
         assertNotNull(kromiseV1, "kromiseV1")
         assertNotNull(kromiseV2, "kromiseV2")
 

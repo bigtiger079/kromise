@@ -27,7 +27,7 @@ open class AbstractMasterDeferredObject(private val results: MutableMultipleResu
                             fail,
                             numberOfPromises))
 
-                    this@AbstractMasterDeferredObject.reject(OneReject(index, promise, result))
+                    this@AbstractMasterDeferredObject.reject(OneReject(index, promise, result!!))
                 }
             }
         }).progress(object : ProgressCallback<P> {
@@ -43,12 +43,12 @@ open class AbstractMasterDeferredObject(private val results: MutableMultipleResu
                 }
             }
         }).done(object : DoneCallback<D> {
-            override fun onDone(result: D) {
+            override fun onDone(result: D?) {
                 synchronized(this@AbstractMasterDeferredObject) {
                     if (!this@AbstractMasterDeferredObject.isPending())
                         return
 
-                    results.set(index, OneResult(index, promise, result))
+                    results.set(index, OneResult(index, promise, result!!))
                     val done = doneCount.incrementAndGet()
 
                     this@AbstractMasterDeferredObject.notify(MasterProgress(

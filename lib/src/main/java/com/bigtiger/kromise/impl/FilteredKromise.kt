@@ -24,7 +24,7 @@ class FilteredKromise<D, F, P, D_OUT, F_OUT, P_OUT>(promise: Kromise<D, F, P>,
                                                             return progress as P_OUT
                                                         }
                                                     })
-    :DeferredObject<D_OUT, F_OUT, P_OUT>(), Kromise<D_OUT, F_OUT, P_OUT>{
+    :DeferredObject<D_OUT, F_OUT, P_OUT>(){
 
     init {
         promise.done(object : DoneCallback<D> {

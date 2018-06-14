@@ -5,10 +5,14 @@ import java.util.concurrent.CopyOnWriteArrayList
 
 
 abstract class AbstractKromise<D, F,P> : Kromise<D, F, P> {
-//    protected val log = LoggerFactory.getLogger(AbstractKromise::class.java)
 
     @Volatile
     protected var state = State.PENDING
+
+    protected val dones: MutableList<(D?)->Unit> = CopyOnWriteArrayList<(D?)->Unit>()
+    protected val fails: MutableList<(F?)->Unit> = CopyOnWriteArrayList<(F?)->Unit>()
+    protected val progressList: MutableList<(P?)->Unit> = CopyOnWriteArrayList<(P?)->Unit>()
+    protected val alwaysList: MutableList<(State, D?, F?)->Unit> = CopyOnWriteArrayList()
 
     protected val doneCallbacks: MutableList<DoneCallback<in D>> = CopyOnWriteArrayList<DoneCallback<in D>>()
     protected val failCallbacks: MutableList<FailCallback<in F>> = CopyOnWriteArrayList<FailCallback<in F>>()
@@ -29,6 +33,17 @@ abstract class AbstractKromise<D, F,P> : Kromise<D, F, P> {
                 triggerDone(callback, resolveResult)
             } else {
                 doneCallbacks.add(callback)
+            }
+        }
+        return this
+    }
+
+    override fun done(callback: (D?) -> Unit): Kromise<D, F, P> {
+        synchronized(this) {
+            if (isResolved()) {
+                triggerDone(callback, resolveResult)
+            } else {
+                dones.add(callback)
             }
         }
         return this
@@ -61,6 +76,10 @@ abstract class AbstractKromise<D, F,P> : Kromise<D, F, P> {
             triggerDone(callback, resolved)
         }
         doneCallbacks.clear()
+        for (done in dones) {
+            done(resolved)
+        }
+        dones.clear()
     }
 
     protected fun triggerDone(callback: DoneCallback<in D>, resolved: D?) {
@@ -72,11 +91,31 @@ abstract class AbstractKromise<D, F,P> : Kromise<D, F, P> {
 
     }
 
+    protected fun triggerDone(callback: (D?)->Unit, resolve: D?) {
+        try {
+            callback(resolve)
+        } catch (e: Exception) {
+            handleException(CallbackType.DONE_CALLBACK, e)
+        }
+    }
+
     protected fun triggerFail(rejected: F) {
         for (callback in failCallbacks) {
             triggerFail(callback, rejected)
         }
         failCallbacks.clear()
+        for (fail in fails) {
+            triggerFail(fail, rejected)
+        }
+        fails.clear()
+    }
+
+    protected fun triggerFail(callback: (F?)->Unit, rejected: F?) {
+        try {
+            callback(rejected)
+        } catch (e: Exception) {
+            handleException(CallbackType.FAIL_CALLBACK, e)
+        }
     }
 
     protected fun triggerFail(callback: FailCallback<in F>, rejected: F?) {
@@ -85,12 +124,15 @@ abstract class AbstractKromise<D, F,P> : Kromise<D, F, P> {
         } catch (e: Exception) {
             handleException(CallbackType.FAIL_CALLBACK, e)
         }
-
     }
 
     protected fun triggerProgress(progress: P) {
         for (callback in progressCallbacks) {
             triggerProgress(callback, progress)
+        }
+
+        for (p in progressList) {
+            triggerProgress(p, progress)
         }
     }
 
@@ -103,15 +145,27 @@ abstract class AbstractKromise<D, F,P> : Kromise<D, F, P> {
 
     }
 
+    protected fun triggerProgress(callback: (P?) ->Unit, progress: P) {
+        try {
+            callback(progress)
+        } catch (e: Exception) {
+            handleException(CallbackType.PROGRESS_CALLBACK, e)
+        }
+
+    }
+
     protected fun triggerAlways(state: State, resolve: D?, reject: F?) {
         for (callback in alwaysCallbacks) {
             triggerAlways(callback, state, resolve, reject)
         }
         alwaysCallbacks.clear()
-//        val lock = Object()
+
+        for (always in alwaysList) {
+            triggerAlways(always, state, resolve, reject)
+        }
+        alwaysList.clear()
         synchronized(lock) {
             lock.notifyAll()
-            //this@AbstractKromise.notifyAll()
         }
     }
 
@@ -121,7 +175,14 @@ abstract class AbstractKromise<D, F,P> : Kromise<D, F, P> {
         } catch (e: Exception) {
             handleException(CallbackType.ALWAYS_CALLBACK, e)
         }
+    }
 
+    protected fun triggerAlways(callback: (State, D?, F?)->Unit, state: State, resolve: D?, reject: F?) {
+        try {
+            callback(state, resolve, reject)
+        } catch (e: Exception) {
+            handleException(CallbackType.ALWAYS_CALLBACK, e)
+        }
     }
 
     override fun progress(callback: ProgressCallback<in P>): Kromise<D, F, P> {
@@ -129,9 +190,14 @@ abstract class AbstractKromise<D, F,P> : Kromise<D, F, P> {
         return this
     }
 
-    override fun then(callback: DoneCallback<in D>): Kromise<D, F, P> {
-        return done(callback)
+    override fun then(doneCallback: DoneCallback<in D>): Kromise<D, F, P> {
+        return done(doneCallback)
     }
+
+//    override fun then(doneCallback: (D?) -> Unit): Kromise<D, F, P> {
+//        return done(doneCallback)
+//    }
+
 
     override fun then(doneCallback: DoneCallback<in D>, failCallback: FailCallback<in F>): Kromise<D, F, P> {
         done(doneCallback)
@@ -147,42 +213,52 @@ abstract class AbstractKromise<D, F,P> : Kromise<D, F, P> {
         return this
     }
 
-    override fun <D_OUT> then(
-            doneFilter: DoneFilter<in D, out D_OUT>): Kromise<D_OUT, F, P> {
-        return FilteredKromise<D, F, P, D_OUT, F, P>(this, doneFilter)
+    override fun <D_OUT> then(doneFilter: (D) -> D_OUT): Kromise<D_OUT, F, P> {
+        return TransformerKromise(this, doneFilter)
+    }
+
+    override fun <D_OUT, F_OUT> then(doneFilter: (D) -> D_OUT, failFilter: (F) -> F_OUT): Kromise<D_OUT, F_OUT, P> {
+        return TransformerKromise(this, doneFilter, failFilter)
+    }
+
+    override fun <D_OUT, F_OUT, P_OUT> then(doneFilter: (D) -> D_OUT, failFilter: (F) -> F_OUT, progressFilter: (P) -> P_OUT): Kromise<D_OUT, F_OUT, P_OUT> {
+        return TransformerKromise(this, doneFilter, failFilter, progressFilter)
+    }
+
+    override fun <D_OUT> then(doneFilter: DoneFilter<in D, out D_OUT>): Kromise<D_OUT, F, P> {
+        return FilteredKromise(this, doneFilter)
     }
 
     override fun <D_OUT, F_OUT> then(
             doneFilter: DoneFilter<in D, out D_OUT>, failFilter: FailFilter<in F, out F_OUT>): Kromise<D_OUT, F_OUT, P> {
-        return FilteredKromise<D, F, P, D_OUT, F_OUT, P>(this, doneFilter, failFilter)
+        return FilteredKromise(this, doneFilter, failFilter)
     }
 
     override fun <D_OUT, F_OUT, P_OUT> then(
             doneFilter: DoneFilter<in D, out D_OUT>, failFilter: FailFilter<in F, out F_OUT>,
             progressFilter: ProgressFilter<in P, out P_OUT>): Kromise<D_OUT, F_OUT, P_OUT> {
-        return FilteredKromise<D, F, P, D_OUT, F_OUT, P_OUT>(this, doneFilter, failFilter, progressFilter)
+        return FilteredKromise(this, doneFilter, failFilter, progressFilter)
     }
 
-    override fun <D_OUT> then(
-            doneFilter: DonePipe<in D, out D_OUT, out F, out P>): Kromise<D_OUT, F, P> {
-        return PipedKromise<D, F, P, D_OUT, F, P>(this, doneFilter, null, null)
+    override fun <D_OUT> then(donePipe: DonePipe<in D, out D_OUT, out F, out P>): Kromise<D_OUT, F, P> {
+        return PipedKromise(this, donePipe, null, null)
     }
 
     override fun <D_OUT, F_OUT> then(
-            doneFilter: DonePipe<in D, out D_OUT, out F_OUT, out P>,
-            failFilter: FailPipe<in F, out D_OUT, out F_OUT, out P>): Kromise<D_OUT, F_OUT, P> {
-        return PipedKromise<D, F, P, D_OUT, F_OUT, P>(this, doneFilter, failFilter, null)
+            donePipe: DonePipe<in D, out D_OUT, out F_OUT, out P>,
+            failPipe: FailPipe<in F, out D_OUT, out F_OUT, out P>): Kromise<D_OUT, F_OUT, P> {
+        return PipedKromise(this, donePipe, failPipe, null)
     }
 
     override fun <D_OUT, F_OUT, P_OUT> then(
-            doneFilter: DonePipe<in D, out D_OUT, out F_OUT, out P_OUT>,
-            failFilter: FailPipe<in F, out D_OUT, out F_OUT, out P_OUT>,
-            progressFilter: ProgressPipe<in P, out D_OUT, out F_OUT, out P_OUT>): Kromise<D_OUT, F_OUT, P_OUT> {
-        return PipedKromise<D, F, P, D_OUT, F_OUT, P_OUT>(this, doneFilter, failFilter, progressFilter)
+            donePipe: DonePipe<in D, out D_OUT, out F_OUT, out P_OUT>,
+            failPipe: FailPipe<in F, out D_OUT, out F_OUT, out P_OUT>,
+            progressPipe: ProgressPipe<in P, out D_OUT, out F_OUT, out P_OUT>): Kromise<D_OUT, F_OUT, P_OUT> {
+        return PipedKromise(this, donePipe, failPipe, progressPipe)
     }
 
-    override fun <D_OUT, F_OUT> always(alwaysFilter: AlwaysPipe<in D, in F, out D_OUT, out F_OUT, out P>): Kromise<D_OUT, F_OUT, P> {
-        return PipedKromise<D, F, P, D_OUT, F_OUT, P>(this, alwaysFilter)
+    override fun <D_OUT, F_OUT> always(alwaysPipe: AlwaysPipe<in D, in F, out D_OUT, out F_OUT, out P>): Kromise<D_OUT, F_OUT, P> {
+        return PipedKromise<D, F, P, D_OUT, F_OUT, P>(this, alwaysPipe)
     }
 
     override fun isPending(): Boolean {

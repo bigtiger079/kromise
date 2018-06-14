@@ -43,6 +43,8 @@ interface Kromise<D, F, P> {
      */
     fun then(doneCallback: DoneCallback<in D>): Kromise<D, F, P>
 
+//    fun then(doneCallback:(D?)->Unit):Kromise<D, F, P>
+
     /**
      * Equivalent to [.done].[.fail]
      *
@@ -71,6 +73,7 @@ interface Kromise<D, F, P> {
      * @return a new kromise for the filtered result
      */
     fun <D_OUT> then(doneFilter: DoneFilter<in D, out D_OUT>): Kromise<D_OUT, F, P>
+
 
     /**
      * Equivalent to `then(doneFilter, failFilter, null)`
@@ -133,6 +136,13 @@ interface Kromise<D, F, P> {
             doneFilter: DoneFilter<in D, out D_OUT>,
             failFilter: FailFilter<in F, out F_OUT>,
             progressFilter: ProgressFilter<in P, out P_OUT>): Kromise<D_OUT, F_OUT, P_OUT>
+
+
+    fun <D_OUT> then(doneFilter: (D)->D_OUT): Kromise<D_OUT, F, P>
+    fun <D_OUT, F_OUT> then(doneFilter: (D)->D_OUT, failFilter:(F)->F_OUT): Kromise<D_OUT, F_OUT, P>
+    fun <D_OUT, F_OUT, P_OUT> then(doneFilter: (D)->D_OUT,
+                                   failFilter:(F)->F_OUT,
+                                   progressFilter: (P)->P_OUT): Kromise<D_OUT, F_OUT, P_OUT>
 
     /**
      * Equivalent to {#code then(DonePipe, null, null)}
@@ -264,6 +274,8 @@ interface Kromise<D, F, P> {
      * @return `this` for chaining more calls
      */
     fun done(callback: DoneCallback<in D>): Kromise<D, F, P>
+
+    fun done(callback:(D?)->Unit): Kromise<D, F, P>
 
     /**
      * This method will register [FailCallback] so that when a Deferred object

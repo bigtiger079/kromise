@@ -1,7 +1,7 @@
 package com.bigtiger.kromise
 
 
-interface Kromise<D, F, P> {
+interface Kromise<D, F> {
 
     /**
      * @return the state of this kromise.
@@ -41,7 +41,7 @@ interface Kromise<D, F, P> {
      * @param doneCallback see [.done]
      * @return `this` for chaining more calls
      */
-    fun then(doneCallback: DoneCallback<in D>): Kromise<D, F, P>
+    fun then(doneCallback: DoneCallback<in D>): Kromise<D, F>
 
     /**
      * Equivalent to [.done].[.fail]
@@ -50,18 +50,8 @@ interface Kromise<D, F, P> {
      * @param failCallback see [.fail]
      * @return `this` for chaining more calls
      */
-    fun then(doneCallback: DoneCallback<in D>, failCallback: FailCallback<in F>): Kromise<D, F, P>
+    fun then(doneCallback: DoneCallback<in D>, failCallback: FailCallback<in F>): Kromise<D, F>
 
-    /**
-     * Equivalent to [.done].[.fail].[.progress]
-     *
-     * @param doneCallback see [.done]
-     * @param failCallback see [.fail]
-     * @param progressCallback see [.progress]
-     * @return `this` for chaining more calls
-     */
-    fun then(doneCallback: DoneCallback<in D>,
-             failCallback: FailCallback<in F>, progressCallback: ProgressCallback<in P>): Kromise<D, F, P>
 
     /**
      * Equivalent to `then(doneFilter, null, null)`
@@ -70,7 +60,7 @@ interface Kromise<D, F, P> {
      * @param doneFilter the filter to execute when a result is available
      * @return a new kromise for the filtered result
      */
-    fun <D_OUT> then(doneFilter: DoneFilter<in D, out D_OUT>): Kromise<D_OUT, F, P>
+    fun <D_OUT> then(doneFilter: DoneFilter<in D, out D_OUT>): Kromise<D_OUT, F>
 
 
     /**
@@ -83,66 +73,14 @@ interface Kromise<D, F, P> {
      */
     fun <D_OUT, F_OUT> then(
             doneFilter: DoneFilter<in D, out D_OUT>,
-            failFilter: FailFilter<in F, out F_OUT>): Kromise<D_OUT, F_OUT, P>
-
-    /**
-     * This method will register filters such that when a Deferred object is either
-     * resolved ([Deferred.resolve]), rejected ([Deferred.reject]) or
-     * is notified of progress ([Deferred.notify]), the corresponding filter
-     * will be invoked.  The result of the filter will be used to invoke the same action on the
-     * returned kromise.
-     *
-     * [DoneFilter] and [FailFilter] will be triggered at the time the Deferred object is
-     * resolved or rejected.  If the Deferred object is already resolved or rejected the filter is
-     * triggered immediately.
-     *
-     * Filters allow to transform the outcome of a kromise into something else.  This concept is equivalent
-     * to the map() method of the java stream API.
-     *
-     * If any of the filter is not specified (`null`), a default No Op filter is used.
-     * If your filter is returning a [Promise] consider using [.then].
-     *
-     * <pre>
-     * `
-     * Deferred deferred = new DeferredObject();
-     * Promise kromise = deferred.kromise();
-     * Promise filtered = kromise.then(new DoneFilter<Integer></Integer>, Integer>() {
-     * Integer filterDone(Integer result) {
-     * return result * 10;
-     * }
-     * });
-     *
-     * filtered.then(new DoneCallback<Integer>() {
-     * void onDone(Integer result) {
-     * System.out.println(result);
-     * }
-     * });
-     *
-     * deferred.resolve(1); // prints 10
-    </Integer>` *
-    </pre> *
-     *
-     * @param doneFilter the filter to execute when a result is available.
-     * If `null`, use [org.jdeferred2.impl.FilteredPromise.NoOpDoneFilter]
-     * @param failFilter the filter to execute when a failure is available.
-     * If `null`, use [org.jdeferred2.impl.FilteredPromise.NoOpFailFilter]
-     * @param progressFilter the filter to execute when progress info is available.
-     * If `null`, use [org.jdeferred2.impl.FilteredPromise.NoOpProgressFilter]
-     * @return a new kromise for the filtered result, failure and progress.
-     */
-    fun <D_OUT, F_OUT, P_OUT> then(
-            doneFilter: DoneFilter<in D, out D_OUT>,
-            failFilter: FailFilter<in F, out F_OUT>,
-            progressFilter: ProgressFilter<in P, out P_OUT>): Kromise<D_OUT, F_OUT, P_OUT>
+            failFilter: FailFilter<in F, out F_OUT>): Kromise<D_OUT, F_OUT>
 
 
-    fun <D_OUT> then(doneFilter: (D)->D_OUT): Kromise<D_OUT, F, P>
 
-    fun <D_OUT, F_OUT> then(doneFilter: (D)->D_OUT, failFilter:(F)->F_OUT): Kromise<D_OUT, F_OUT, P>
+    fun <D_OUT> then(doneFilter: (D)->D_OUT): Kromise<D_OUT, F>
 
-    fun <D_OUT, F_OUT, P_OUT> then(doneFilter: (D)->D_OUT,
-                                   failFilter:(F)->F_OUT,
-                                   progressFilter: (P)->P_OUT): Kromise<D_OUT, F_OUT, P_OUT>
+    fun <D_OUT, F_OUT> then(doneFilter: (D)->D_OUT, failFilter:(F)->F_OUT): Kromise<D_OUT, F_OUT>
+
 
     /**
      * Equivalent to {#code then(DonePipe, null, null)}
@@ -151,7 +89,7 @@ interface Kromise<D, F, P> {
      * @param donePipe the pipe to invoke when a result is available
      * @return a new kromise for the piped result.
      */
-    fun <D_OUT> then(donePipe: DonePipe<in D, out D_OUT, out F, out P>): Kromise<D_OUT, F, P>
+    fun <D_OUT> then(donePipe: DonePipe<in D, out D_OUT, out F>): Kromise<D_OUT, F>
 
     /**
      * Equivalent to `then(DonePipe, FailPipe, null)`
@@ -162,56 +100,9 @@ interface Kromise<D, F, P> {
      * @return a new kromise for the piped result and failure.
      */
     fun <D_OUT, F_OUT> then(
-            donePipe: DonePipe<in D, out D_OUT, out F_OUT, out P>,
-            failPipe: FailPipe<in F, out D_OUT, out F_OUT, out P>): Kromise<D_OUT, F_OUT, P>
+            donePipe: DonePipe<in D, out D_OUT, out F_OUT>,
+            failPipe: FailPipe<in F, out D_OUT, out F_OUT>): Kromise<D_OUT, F_OUT>
 
-    /**
-     * This method will register pipes such that when a Deferred object is either
-     * resolved ([Deferred.resolve]), rejected ([Deferred.reject]) or
-     * is notified of progress ([Deferred.notify]), the corresponding pipe
-     * will be invoked.
-     *
-     * [DonePipe] and [FailPipe] will be triggered at the time the Deferred object is
-     * resolved or rejected.  If the Deferred object is already resolved or rejected the filter is
-     * triggered immediately.
-     *
-     * This method is similar to JQuery's pipe() method, where a new [Promise] is returned
-     * by the the pipe filter instead of the original.  This is useful to handle return values
-     * and then rewiring it to different callbacks.
-     *
-     * Pipes start a new [Deferred] object.  This allows to chain asynchronous calls.
-     *
-     * If your pipe does not do any asynchronous work consider using [.then]
-     *
-     * <pre>
-     * `
-     * kromise.then(new DonePipe<Integer></Integer>, Integer, String, Void>() {
-     * @Override
-     * Deferred<Integer></Integer>, Void, Void> pipeDone(Integer result) {
-     * // Reject values greater than 100
-     * if (result > 100) {
-     * return new DeferredObject<Integer></Integer>, Void, Void>().reject("Failed");
-     * } else {
-     * return new DeferredObject<Integer></Integer>, Void, Void>().resolve(result);
-     * }
-     * }
-     * }).done(...)
-     * .fail(...);
-    ` *
-    </pre> *
-     *
-     * @param donePipe the pipe to invoke when a result is available.
-     * If `null`, result is piped unchanged
-     * @param failPipe the pipe to invoke when a failure is available.
-     * If `null`, failure is piped unchanged
-     * @param progressPipe the pipe to execute when progress info is available.
-     * If `null`, progress is piped unchanged
-     * @return a new kromise for the piped result, failure and progress.
-     */
-    fun <D_OUT, F_OUT, P_OUT> then(
-            donePipe: DonePipe<in D, out D_OUT, out F_OUT, out P_OUT>,
-            failPipe: FailPipe<in F, out D_OUT, out F_OUT, out P_OUT>,
-            progressPipe: ProgressPipe<in P, out D_OUT, out F_OUT, out P_OUT>): Kromise<D_OUT, F_OUT, P_OUT>
 
     /**
      * This method will register a pipe such that when a Deferred object is either
@@ -249,7 +140,7 @@ interface Kromise<D, F, P> {
      * @return a new kromise for the piped result or failure.
      */
     fun <D_OUT, F_OUT> always(
-            alwaysPipe: AlwaysPipe<in D, in F, out D_OUT, out F_OUT, out P>): Kromise<D_OUT, F_OUT, P>
+            alwaysPipe: AlwaysPipe<in D, in F, out D_OUT, out F_OUT>): Kromise<D_OUT, F_OUT>
 
     /**
      * This method will register [DoneCallback] so that when a Deferred object
@@ -273,9 +164,9 @@ interface Kromise<D, F, P> {
      * @param callback the callback to be triggered
      * @return `this` for chaining more calls
      */
-    fun done(callback: DoneCallback<in D>): Kromise<D, F, P>
+    fun done(callback: DoneCallback<in D>): Kromise<D, F>
 
-    fun done(callback:(D?)->Unit): Kromise<D, F, P>
+    fun done(callback:(D?)->Unit): Kromise<D, F>
 
     /**
      * This method will register [FailCallback] so that when a Deferred object
@@ -299,7 +190,7 @@ interface Kromise<D, F, P> {
      * @param callback the callback to be triggered
      * @return `this` for chaining more calls
      */
-    fun fail(callback: FailCallback<in F>): Kromise<D, F, P>
+    fun fail(callback: FailCallback<in F>): Kromise<D, F>
 
     /**
      * This method will register [AlwaysCallback] so that when a Deferred object is either
@@ -333,30 +224,8 @@ interface Kromise<D, F, P> {
      * @param callback the callback to be triggered
      * @return `this` for chaining more calls
      */
-    fun always(callback: AlwaysCallback<in D, in F>): Kromise<D, F, P>
+    fun always(callback: AlwaysCallback<in D, in F>): Kromise<D, F>
 
-    /**
-     * This method will register [ProgressCallback] so that when a Deferred object
-     * is notified of progress ([Deferred.notify]), [ProgressCallback] will be triggered.
-     *
-     * You can register multiple [ProgressCallback] by calling the method multiple times.
-     * The order of callback trigger is based on the order they have been registered.
-     *
-     * <pre>
-     * `
-     * kromise.progress(new ProgressCallback(){
-     * public void onProgress(Object progress) {
-     * // e.g., update progress in the GUI while the background task is still running.
-     * }
-     * });
-    ` *
-    </pre> *
-     *
-     * @see Deferred.notify
-     * @param callback the callback to be triggered
-     * @return `this` for chaining more calls
-     */
-    fun progress(callback: ProgressCallback<in P>): Kromise<D, F, P>
 
     /**
      * This method will wait as long as the State is Pending.  This method will return fast

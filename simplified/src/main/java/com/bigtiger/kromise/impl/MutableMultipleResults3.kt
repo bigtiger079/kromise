@@ -1,12 +1,16 @@
 package com.bigtiger.kromise.impl
 
-import com.bigtiger.kromise.multiple.MultipleResults2
 import com.bigtiger.kromise.multiple.OneResult
+import com.bigtiger.kromise.multiple.MultipleResults3
 
-class MutableMultipleResults2<V1, V2>: AbstractMutableMultipleResults(2), MutableMultipleResults, MultipleResults2<V1, V2> {
+internal class MutableMultipleResults3<V1, V2, V3>
+    : AbstractMutableMultipleResults(3),
+        MutableMultipleResults,
+        MultipleResults3<V1, V2, V3> {
 
-    private lateinit var v1: OneResult<V1>
-    private lateinit var v2: OneResult<V2>
+    private var v1: OneResult<V1>? = null
+    private var v2: OneResult<V2>? = null
+    private var v3: OneResult<V3>? = null
 
     protected fun setFirst(v1: OneResult<V1>) {
         super.set(0, v1)
@@ -18,13 +22,21 @@ class MutableMultipleResults2<V1, V2>: AbstractMutableMultipleResults(2), Mutabl
         this.v2 = v2
     }
 
+    protected fun setThird(v3: OneResult<V3>) {
+        super.set(2, v3)
+        this.v3 = v3
+    }
 
     override fun getFirst(): OneResult<V1> {
-        return v1
+        return v1!!
     }
 
     override fun getSecond(): OneResult<V2> {
-        return v2
+        return v2!!
+    }
+
+    override fun getThird(): OneResult<V3> {
+        return v3!!
     }
 
     override operator fun set(index: Int, result: OneResult<*>) {
@@ -32,11 +44,11 @@ class MutableMultipleResults2<V1, V2>: AbstractMutableMultipleResults(2), Mutabl
         when (index) {
             0 -> this.v1 = result as OneResult<V1>
             1 -> this.v2 = result as OneResult<V2>
+            2 -> this.v3 = result as OneResult<V3>
         }
     }
 
     override fun size(): Int {
-        return 2
+        return 3
     }
-
 }

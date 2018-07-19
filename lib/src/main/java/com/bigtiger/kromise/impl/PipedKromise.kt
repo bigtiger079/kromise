@@ -1,9 +1,8 @@
 package com.bigtiger.kromise.impl
+
 import com.bigtiger.kromise.*
 import com.bigtiger.kromise.ProgressCallback
 import com.bigtiger.kromise.AlwaysCallback
-
-
 
 class PipedKromise<D, F, P, D_OUT, F_OUT, P_OUT> ()
     : DeferredObject<D_OUT, F_OUT, P_OUT>(), Kromise<D_OUT, F_OUT, P_OUT> {
@@ -12,6 +11,7 @@ class PipedKromise<D, F, P, D_OUT, F_OUT, P_OUT> ()
                 doneFilter: DonePipe<in D, out D_OUT, out F_OUT, out P_OUT>?,
                 failFilter: FailPipe<in F, out D_OUT, out F_OUT, out P_OUT>?,
                 progressFilter: ProgressPipe<in P, out D_OUT, out F_OUT, out P_OUT>?):this() {
+
         kromise.done(object : DoneCallback<D> {
             override fun onDone(result: D?) {
                 if (doneFilter != null)

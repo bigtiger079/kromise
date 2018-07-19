@@ -5,8 +5,8 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-
 class DefaultDeferredManager(private val executorService: ExecutorService = Executors.newCachedThreadPool()): AbstractDeferredManager() {
+
     /**
      * By default, [.autoSubmit] will be set to true
      * You can set it to false by using [.setAutoSubmit]
@@ -17,9 +17,7 @@ class DefaultDeferredManager(private val executorService: ExecutorService = Exec
         const val DEFAULT_AUTO_SUBMIT = true
     }
 
-
     private var autoSubmit = DEFAULT_AUTO_SUBMIT
-
 
     fun getExecutorService(): ExecutorService {
         return executorService
@@ -31,11 +29,11 @@ class DefaultDeferredManager(private val executorService: ExecutorService = Exec
     }
 
     fun isShutdown(): Boolean {
-        return executorService.isShutdown()
+        return executorService.isShutdown
     }
 
     fun isTerminated(): Boolean {
-        return executorService.isTerminated()
+        return executorService.isTerminated
     }
 
     fun shutdown() {

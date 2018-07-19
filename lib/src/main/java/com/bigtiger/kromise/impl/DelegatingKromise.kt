@@ -78,6 +78,23 @@ abstract class DelegatingKromise<D, F, P>(val delegate: Kromise<D, F, P>): Kromi
         return delegate.then(donePipe, failPipe, progressPipe)
     }
 
+    override fun <D_OUT> then(doneFilter: (D) -> D_OUT): Kromise<D_OUT, F, P> {
+        return delegate.then(doneFilter)
+    }
+
+    override fun <D_OUT, F_OUT> then(doneFilter: (D) -> D_OUT, failFilter: (F) -> F_OUT): Kromise<D_OUT, F_OUT, P> {
+        return delegate.then(doneFilter, failFilter)
+    }
+
+    override fun <D_OUT, F_OUT, P_OUT> then(doneFilter: (D) -> D_OUT, failFilter: (F) -> F_OUT, progressFilter: (P) -> P_OUT): Kromise<D_OUT, F_OUT, P_OUT> {
+        return delegate.then(doneFilter, failFilter, progressFilter)
+    }
+
+    override fun done(callback: (D?) -> Unit): Kromise<D, F, P> {
+        return delegate.done(callback)
+    }
+
+
     override fun <D_OUT, F_OUT> always(alwaysPipe: AlwaysPipe<in D, in F, out D_OUT, out F_OUT, out P>): Kromise<D_OUT, F_OUT, P> {
         return delegate.always(alwaysPipe)
     }
